@@ -1,0 +1,63 @@
+LeRobot
+
+The follower uses all 12v motors with 1/345 gearing; 
+The leader uses 7.4v motors with 1x1/345, 2x1/191, 3x1/147 gearing.
+
+ports:
+1 - Follower - closer to charging cable - /dev/tty.wchusbserial5AAF2702761
+2 - Leader - closer to aux - /dev/tty.wchusbserial5A7A0157241
+
+start virtual env
+conda activate lerobot
+
+Set up:
+lerobot-setup-motors \
+    --robot.type=so101_follower \
+    --robot.port=/dev/tty.wchusbserial5AAF2702761
+
+lerobot-setup-motors \
+    --teleop.type=so101_leader \
+    --teleop.port=/dev/tty.wchusbserial5A7A0157241
+
+
+Calibrate:
+lerobot-calibrate \
+    --robot.type=so101_follower \
+    --robot.port=/dev/tty.wchusbserial5AAF2702761
+    --robot.id=sam
+
+lerobot-calibrate \
+    --teleop.type=so101_leader \
+    --teleop.port=/dev/tty.wchusbserial5A7A0157241
+    --teleop.id=maestro
+
+
+Teleoperate:
+lerobot-teleoperate \
+    --robot.type=so101_follower \
+    --robot.port=/dev/tty.wchusbserial5AAF2702761 \
+    --robot.id=None \
+    --teleop.type=so101_leader \
+    --teleop.port=/dev/tty.wchusbserial5A7A0157241 \
+    --teleop.id=None
+
+with Rerun:
+lerobot-teleoperate \
+    --robot.type=so101_follower \
+    --robot.port=/dev/tty.wchusbserial5AAF2702761 \
+    --robot.id=None \
+    --teleop.type=so101_leader \
+    --teleop.port=/dev/tty.wchusbserial5A7A0157241 \
+    --teleop.id=None \
+    --display_data=true
+
+with camera visualization:
+lerobot-teleoperate \
+    --robot.type=so101_follower \
+    --robot.port=/dev/tty.wchusbserial5AAF2702761 \
+    --robot.cameras="{ front: {type: opencv, index_or_path: 0, width: 1920, height: 1080, fps: 30}}" \
+    --robot.id=None \
+    --teleop.type=so101_leader \
+    --teleop.port=/dev/tty.wchusbserial5A7A0157241 \
+    --teleop.id=None \
+    --display_data=true
