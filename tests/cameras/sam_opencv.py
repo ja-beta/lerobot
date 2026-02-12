@@ -1,26 +1,49 @@
 from lerobot.cameras.opencv.configuration_opencv import OpenCVCameraConfig
-from lerobot.cameras.opencv.camera_opencv import OpenCVCamera
+from lerobot.cameras.opencv.camera_opencv_sam import OpenCVCamera
 from lerobot.cameras.configs import ColorMode, Cv2Rotation
 
-# Construct an `OpenCVCameraConfig` with your desired FPS, resolution, color mode, and rotation.
-# jasmine: these settings match my laptop camera - might be different for others.
-config = OpenCVCameraConfig(
-    index_or_path=0,
-    fps=30, 
-    width=1920,
-    height=1080,
-    color_mode=ColorMode.RGB,
-    rotation=Cv2Rotation.NO_ROTATION
-)
+# First, find all available cameras using the improved find_cameras method
+print("Finding all available cameras...")
+all_cameras = OpenCVCamera.find_cameras()
+print(f"\nFound {len(all_cameras)} cameras that can read frames:\n")
 
-# Instantiate and connect an `OpenCVCamera`, performing a warm-up read (default).
-camera = OpenCVCamera(config)
-camera.connect()
+for i, cam_info in enumerate(all_cameras):
+    print(f"Camera #{i}:")
+    print(f"  ID: {cam_info['id']}")
+    print(f"  Name: {cam_info['name']}")
+    print(f"  Backend: {cam_info['backend_api']}")
+    print(f"  Resolution: {cam_info['default_stream_profile']['width']}x{cam_info['default_stream_profile']['height']}")
+    print(f"  FPS: {cam_info['default_stream_profile']['fps']}")
+    print()
 
-# Read frames asynchronously in a loop via `async_read(timeout_ms)`
-try:
-    for i in range(10):
-        frame = camera.async_read(timeout_ms=200)
-        print(f"Async frame {i} shape:", frame.shape)
-finally:
-    camera.disconnect()
+# Test reading from each detected camera
+for cam_info in all_cameras:
+    cam_id = cam_info['id']
+    print(f"\n{'='*50}")
+    print(f"Testing camera {cam_id} ({cam_info['name']})")
+    print(f"{'='*50}")
+    
+    try:
+        # Use default settings from the camera
+        config = OpenCVCameraConfig(
+            index_or_path=cam_id,
+            color_mode=ColorMode.RGB,
+        )
+        
+        camera = OpenCVCamera(config)
+        camera.connect()
+        
+        # Try reading a few frames
+        print(f"Successfully connected to camera {cam_id}")
+        for i in range(5):
+            try:
+                frame = camera.read()
+                print(f"  Frame {i+1}: shape {frame.shape}, dtype {frame.dtype}")
+            except Exception as e:
+                print(f"  Error reading frame {i+1}: {e}")
+        
+        camera.disconnect()
+        print(f"Camera {cam_id} test completed successfully!")
+        
+    except Exception as e:
+        print(f"Failed to use camera {cam_id}: {e}")
